@@ -6,34 +6,49 @@ function ask(questionText) {
         rl.question(questionText, resolve);
     });
 }
+// -------------------------------------------------------------------------------
+// function to generate the computer's guess
+
+function randomInt(max, min) {
+    return Math.floor(min + (Math.random() * (max - min + 1)))
+}
+
+// -------------------------------------------------------------------------------
+// main game function here
 
 start();
 
 async function start() {
-    console.log("Let's play a game where I (the computer) think of a number in a range that you give me and you (the human) try to guess it.")
+    console.log("Let's play a game where I (the computer) think of an integer in a range that you give me and you (the human) try to guess it.")
 
     await ask("Press ENTER when you're ready. ");
-    lowerRange = parseInt(await ask("Please give me a starting point. "));
-    
-    upperRange = parseInt(await ask("Now give me an ending point. "));
-    
-    let compNum = randomInt(upperRange, lowerRange);
-    console.log(compNum) // this is just so that you can see the computer's number
 
-    function randomInt(max, min) {
-        return Math.floor(min + (Math.random() * (max - min + 1)))
-    }
-    num = await ask("Guess a number. ")
-    
+    // variables here
+
+    let lowerRange = parseInt(await ask("Please give me a minimum value. "));
+    let upperRange = parseInt(await ask("Now give me a maximum value. "));
+    let compNum = randomInt(upperRange, lowerRange);
+    let playerGuess = await ask("Guess a number. ")
     let count = 1;
 
-    while (num !== compNum) {
-        if (num < compNum) {
-            num = await ask("The correct number is higher. Guess again. ")
-        } else {
-            num = await ask("The correct number is lower. Guess again. ")
-        } count += 1;
+    // player's guessing loop
 
+    while (playerGuess !== compNum) {
+
+
+        // checks if guess is within specified range
+
+        if (playerGuess > upperRange || playerGuess < lowerRange) {
+            console.log("Your number is outside the guessing range!")
+            playerGuess = parseFloat(await ask("Please guess again. "))
+
+            // valid guesses here
+
+        } else if (playerGuess < compNum) {
+            playerGuess = parseFloat(await ask("The correct number is higher. Guess again. "))
+        } else {
+            playerGuess = parseFloat(await ask("The correct number is lower. Guess again. "))
+        } count += 1;
     }
     console.log("Congratulations! You guessed the correct number in " + count + " tries!")
 

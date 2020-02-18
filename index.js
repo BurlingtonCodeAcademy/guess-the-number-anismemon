@@ -1,67 +1,167 @@
 const readline = require('readline');
 const rl = readline.createInterface(process.stdin, process.stdout);
 
-// functions are here
+// ------------------------------------------------------------------------------------
+// functions used by main game functions
 
 function ask(questionText) {
   return new Promise((resolve, reject) => {
     rl.question(questionText, resolve);
   });
 }
+// binary search function to optimize guessing in computerGuess game
 
 function binarySearch(min, max) {
   return Math.floor((max + min) / 2);
-
 }
+
+// random number generator in playerGuess game
+
+function randomInt(max, min) {
+  return Math.floor(min + (Math.random() * (max - min + 1)))
+}
+
+// ------------------------------------------------------------------------------------
+// global variables for common answers
+
+let yesAnswer = ["yes", "y", "yeah", "yup"]
+let noAnswer = ["no", "n", "nah", "nope"]
+let highAnswer = ["h", "higher", "high", "up"]
+let lowAnswer = ["l", "lower", "low", "down"]
+
+// ------------------------------------------------------------------------------------
+// guessing game setup
+
 start();
 
 async function start() {
-  console.log("Let's play a game where you (the human) think of a number between 1 and n and I (the computer) try to guess it.")
 
-  await ask("Press ENTER when you're ready. ");
+  console.log("Let's play a guessing game! Either you (the human) can guess a number that I (the computer) think of, or I can guess a number you think of.")
 
-  // variables within the async function are here
-
-  let b = parseInt(await ask("Great. Please give me the upper range for my guesses. "));
+  let whichGame = await ask("\nType 'c' if you want me to guess, or 'h' if you want me to guess. ");
   
-  // I tried to set the default here, but it doesn't work
-  // if (b !== Number) {
-  //   b = 100;
-  // }
+  // loop to give you a couple of chances to type 'c' and 'h' if you mistype
 
-  let a = 1;
-  let firstGuess = binarySearch(a, b);
-  let secondGuess = '';
-  let answerYesNo = "";
-  let answerHighLow = "";
-  let min = Math.min(a, b);
-  let max = Math.max(a, b);
-  let count = 1;
+  let i = 0
+  while (i < 2) {
+    if (whichGame.toLowerCase() === 'c') {
+      computerGuess()
+    } else if (whichGame.toLowerCase() === 'h') {
+      playerGuess()
+    } 
+    i++    
+    whichGame = await ask("\nType 'c' if you want me to guess, or 'h' if you want me to guess. ");
+    
+  } 
+  console.log("\nMaybe next time!")
+  process.exit()
 
-  console.log("Now I'll guess a number between 1 and " + b + ".")
-  answerYesNo = await ask("Is it ... " + firstGuess + "? (Y/N) ")
+  // ------------------------------------------------------------------------------------
+  // interactive game where the computer guesses player's number
 
-  // guessing loop here but it does not work correctly for all numbers and I don't know why
+  async function computerGuess() {
 
-  while (answerYesNo.toUpperCase() === "N" || answerYesNo.toUpperCase() === "NO") {
-    answerHighLow = await ask("Is it higher (H) or lower (L)? ")
+    // user input to set max value
 
-    if (answerHighLow.toUpperCase() === "H") {
-      min = Math.max(a, firstGuess)
-      a = secondGuess;
+    let max = parseInt(await ask("\nGreat. Please give me the upper range for my guesses. "));
 
+    // default max if no value selected
+
+    if (typeof max !== "number") {
+      max = 100;
+    }
+
+    // other variables needed
+
+    let min = 1;
+    let guess = binarySearch(min, max);
+    let answerYesNo = "";
+    let answerHighLow = "";
+    let count = 1;
+
+    console.log("\nNow I'll guess a number between 1 and " + max + ".")
+    answerYesNo = await ask("\nIs it ... " + guess + "? (Y/N) ")
+
+    // guessing loop 
+
+    while (!yesAnswer.includes(answerYesNo.toLowerCase())) {
+      answerHighLow = await ask("\nIs it higher (H) or lower (L)? ")
+
+      // guessing mechanism 
+
+      if (highAnswer.includes(answerHighLow.toLowerCase())) {
+        min = guess + 1;
+
+      } else if (lowAnswer.includes(answerHighLow.toLowerCase())) {
+        max = guess - 1;
+      } else {
+        answerHighLow = await ask("\nIs it higher (H) or lower (L)? ")
+      }
+      guess = binarySearch(min, max)
+      answerYesNo = await ask("\nIs it ... " + guess + "? (Y/N) ")
+      count += 1;
+
+      // cheat detector 
+
+      if (min > max) {
+        console.log("\nThere appears to be a problem. Are you sure about your number?");
+        process.exit();
+      }
+    }
+
+    // conclusion to game and offer to play the other game
+
+    console.log("\nWow! I guessed it in " + count + " tries!")
+    let playOtherGame = await ask("\nNow would you like to guess my number? Y/N ")
+    if (yesAnswer.includes(playOtherGame.toLowerCase())) {
+      playerGuess()
     } else {
-      max = Math.min(b, firstGuess)
-      b = secondGuess;
-
-    } secondGuess = binarySearch(min, max)
-    answerYesNo = await ask("Is it ... " + secondGuess + "? (Y/N) ")
-    count += 1;
-    firstGuess = secondGuess;
-
+      console.log("\nThanks for playing!")
+      process.exit();
+    }
   }
-  console.log("Wow! I guessed it in " + count + " tries!")
 
-  process.exit();
+  // -------------------------------------------------------------------------------
+  // interactive game where player guesses computer's randomly generated number 
 
+  async function playerGuess() {
+
+    // variables here
+
+    let lowerRange = parseInt(await ask("\nPlease give me a minimum value. "));
+    let upperRange = parseInt(await ask("\nNow give me a maximum value. "));
+    let compNum = randomInt(upperRange, lowerRange);
+    let playerGuess = await ask("\nGuess a number. ")
+    let count = 1;
+
+    // player's guessing loop
+
+    while (playerGuess !== compNum) {
+
+      // checks if guess is within specified range
+
+      if (playerGuess > upperRange || playerGuess < lowerRange) {
+        console.log("\nYour number is outside the guessing range!")
+        playerGuess = parseFloat(await ask("\nPlease guess again. "))
+
+        // player guesses 
+
+      } else if (playerGuess < compNum) {
+        playerGuess = parseFloat(await ask("\nThe correct number is higher. Guess again. "))
+      } else {
+        playerGuess = parseFloat(await ask("\nThe correct number is lower. Guess again. "))
+      } count += 1;
+    }
+
+    // conclusion to game and offer to play other game
+
+    console.log("\nCongratulations! You guessed the correct number in " + count + " tries!")
+    let playOtherGame = await ask("\nNow would you like me to guess your number? Y/N ")
+    if (yesAnswer.includes(playOtherGame.toLowerCase())) {
+      computerGuess()
+    } else {
+      console.log("\nThanks for playing!")
+      process.exit()
+    }
+  }
 }
