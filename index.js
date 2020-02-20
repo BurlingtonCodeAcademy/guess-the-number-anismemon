@@ -2,7 +2,7 @@ const readline = require('readline');
 const rl = readline.createInterface(process.stdin, process.stdout);
 
 // ----------------------------------------------------------------------------------------------------------------------
-// ----------- functions used by main game functions --------------------------------------------------------------------
+// ----------- functions used by main game __________--------------------------------------------------------------------
 
 function ask(questionText) {
   return new Promise((resolve, reject) => {
@@ -24,7 +24,7 @@ function randomInt(max, min) {
 // ----------- global variables for common answers ----------------------------------------------------------------------
 
 let yesAnswer = ["yes", "y", "yeah", "yup"]
-let noAnswer = ["no", "n", "nah", "nope"]
+let noAnswer = ["no", "n", "nah", "nope"] // didn't use but could be helpful later
 let highAnswer = ["h", "higher", "high", "up"]
 let lowAnswer = ["l", "lower", "low", "down"]
 
@@ -42,14 +42,14 @@ async function start() {
   // ------------- loop to give you a couple of chances to type 'c' and 'h' if you mistype --------------------------------
 
   let i = 0
-  while (i < 2) {
+  while (i < 3) {
     if (whichGame.toLowerCase() === 'c') {
       computerGuess()
     } else if (whichGame.toLowerCase() === 'h') {
       playerGuess()
     }
     i++
-    whichGame = await ask("\nType 'c' if you want me to guess, or 'h' if you want me to guess. ");
+    whichGame = await ask("\nType 'C' if you want me to guess, or 'H' if you want to guess. ");
   }
   console.log("\nMaybe next time!")
   process.exit()
@@ -99,7 +99,7 @@ async function start() {
       answerYesNo = await ask("\nIs it ... " + guess + "? (Y/N) ")
       count += 1;
 
-      // --------------- cheat detector checks if player is giving accurate responses ---------------------------------------
+      // --------------- cheat detector checks if player gave inaccurate responses ------------------------------------------
 
       if (min > max) {
         console.log("\nThere appears to be a problem. Are you sure about your number?");
@@ -124,7 +124,7 @@ async function start() {
 
   async function playerGuess() {
 
-    // --------- checks that the numbers input are actually numbers -------------------------------------------------------
+    // --------- checks that the range numbers input are actually numbers ---------------------------------------------------
 
     let lowerRange = parseInt(await ask("\nPlease give me a minimum value. "));
     let upperRange = parseInt(await ask("\nPlease give me a maximum value. "))
